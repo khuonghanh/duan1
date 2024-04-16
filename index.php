@@ -7,6 +7,7 @@ include "model/danhmuc.php";
 include "model/sanpham.php";
 include "model/taikhoan.php";
 include "model/cart.php";
+include "model/baiviet.php";
 
 
 if (!isset ($_SESSION['mycart']))
@@ -34,7 +35,6 @@ if ((isset ($_GET['act'])) && ($_GET['act'] != "")) {
 
                 if (is_array($checkuser)) {
                     $_SESSION['user'] = $checkuser;
-                    $_SESSION['ten']=$user;
                     $thongbao = "Đăng nhập thành công";
                     header("location: index.php");
                     exit(); // Thêm exit() để dừng việc thực thi mã sau khi chuyển hướng
@@ -157,14 +157,21 @@ if ((isset ($_GET['act'])) && ($_GET['act'] != "")) {
                 $gia = $_POST['gia'];
                 $soluong = $_POST['soluong'];
                 $hinh = $_POST['hinh'];
-                $dungluong = $_POST['dungluong'];
                 $ttien = $gia * $soluong;
 
 
                 $fl = 0;
-               
+                for ($i = 0; $i < sizeof($_SESSION['mycart']); $i++) {
+                    if ($_SESSION['mycart'][$i][1] == $tensp && $_SESSION['mycart'][$i][5] == $dungluong) {
+                        $fl = 1;
+                        $spnew = $soluong + $_SESSION['mycart'][$i][4];
+
+                        $_SESSION['mycart'][$i][4] = $spnew;
+                        break;
+                    }
+                }
                 if ($fl == 0) {
-                    $spadd = [$id, $tensp, $gia, $hinh, $soluong, $dungluong, $ttien];
+                    $spadd = [$id, $tensp, $gia, $hinh, $soluong,$dungluong, $ttien];
                     array_push($_SESSION['mycart'], $spadd);
                 }
 
@@ -209,7 +216,7 @@ if ((isset ($_GET['act'])) && ($_GET['act'] != "")) {
 
 
             }
-            $bill = loadone_bill($idbill);
+            $bill = loadone_bill($id);
 
             include "view/billcomfirm.php";
             $_SESSION['mycart'] = [];
@@ -217,24 +224,39 @@ if ((isset ($_GET['act'])) && ($_GET['act'] != "")) {
 
         case 'chitietsp':
             include "view/chitietsp.php";
-            break;  
+            break;
 
-        case 'lichsu':
-            if(isset($_SESSION['user'])){
-                $ten = $_SESSION['ten'];
-                $lichsu =loadall_lichsu($ten);
-            }
-            include "view/lichsumua.php";
-            break;
-        case 'suadh':
-            if(isset($_GET['id'])&&($_GET['id']>0)){
-                $id=$_GET['id'];
-                $donhang=loadone_billadmin($id);
-                $idbill=$id;
-                $billcart=loadall_cartadmin($idbill);
-            }
-            include "view/ctdh.php";
-            break;
+         case 'dsbaiviet':
+
+                include "view/baiviet.php";
+                break;
+    
+            case 'baiviet':
+    
+                
+                if (isset ($_GET['id']) && ($_GET['id'] > 0)) {
+                    $bai_viet = $_GET['id'];
+                } else {
+                    $bai_viet = 0;
+                }
+                $list_baiviet = load_all_baiviet( );
+              
+                include "view/baiviet.php";
+                break;
+
+             case 'baivietct':
+                 if (isset ($_GET['idbv']) && ($_GET['idbv'] > 0)) {
+        
+                 $onebv = loadone_baiviet($_GET['idbv']);
+                   extract($onebv);
+                  
+                   include "view/chitietbv.php";
+                   break;
+                    } else {
+                        include "view/home.php";
+                        break;
+                    }
+
 
         default:
             include "view/home.php";
